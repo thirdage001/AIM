@@ -1,0 +1,33 @@
+{
+  "name": "@aim/cli",
+  "version": "1.0.0",
+  "description": "AIM command-line interface: compile, render, validate, diff, lock, resolve, run, author.",
+  "type": "module",
+  "bin": {
+    "aim": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aim/core": "workspace:*",
+    "@aim/host-node": "workspace:*",
+    "@aim/adapter-reference": "workspace:*",
+    "@aim/resolve": "workspace:*",
+    "@aim/author": "workspace:*"
+  },
+  "tsup": {
+    "entry": ["src/cli.ts"],
+    "format": ["esm"],
+    "platform": "node",
+    "target": "es2022",
+    "dts": false,
+    "clean": true,
+    "sourcemap": true,
+    "banner": { "js": "#!/usr/bin/env node" },
+    "external": ["@aim/core", "@aim/host-node", "@aim/adapter-reference", "@aim/resolve", "@aim/author"]
+  }
+}

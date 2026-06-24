@@ -1,0 +1,39 @@
+{
+  "name": "@aim/provider-vercel",
+  "version": "1.0.0",
+  "description": "ModelProvider backed by the Vercel AI SDK (generateObject/generateText). Exactly one call per model step, no tool loop (§13.3).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aim/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "ai": "^4.0.0"
+  },
+  "devDependencies": {
+    "ai": "^4.0.0"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "platform": "neutral",
+    "target": "es2022",
+    "dts": true,
+    "clean": true,
+    "sourcemap": true,
+    "external": ["@aim/core", "ai"]
+  }
+}

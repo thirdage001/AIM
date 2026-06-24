@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aim.spec/1.0/manifest.json",
+  "title": "AIM Manifest 1.0",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["aim", "kind", "id", "intent", "plan", "lifecycle", "provenance"],
+  "properties": {
+    "aim": { "const": "1.0" },
+    "kind": { "const": "Manifest" },
+    "id": { "type": "string", "pattern": "^mf_[a-z0-9]+$" },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "source", "authoredBy"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "source": { "enum": ["natural-language", "authored", "imported"] },
+        "authoredBy": { "enum": ["ai", "human"] }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "required"],
+        "properties": {
+          "type": { "enum": ["string", "number", "boolean", "object", "array", "file"] },
+          "required": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "trust", "constraint"],
+        "properties": {
+          "ref": { "type": "string" },
+          "trust": { "enum": ["knowledge", "capability", "transform"] },
+          "constraint": { "type": "string" },
+          "need": { "type": "string" },
+          "resolved": { "type": "string" },
+          "hash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+          "scopes": { "type": "array", "items": { "type": "string" } },
+          "approval": { "enum": ["none", "required"] },
+          "anchor": { "enum": ["pinned-hash", "signature"] }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy"],
+      "properties": {
+        "strategy": { "enum": ["full", "minimal-relevant"] },
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "runtime": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "adapter": { "type": "string" },
+            "model": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "provider": { "type": "string" },
+                "name": { "type": "string" }
+              }
+            },
+            "streaming": { "type": "boolean" }
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "type", "uses"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "enum": ["model", "capability", "transform"] },
+              "uses": { "type": "string" },
+              "prompt": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["role", "goal", "output"],
+                "properties": {
+                  "role": { "type": "string" },
+                  "goal": { "type": "string" },
+                  "style": { "enum": ["strict", "concise", "explanatory"] },
+                  "rules": { "type": "array", "items": { "type": "string" } },
+                  "contextFrom": { "type": "array", "items": { "type": "string" } },
+                  "output": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["format"],
+                    "properties": {
+                      "format": { "enum": ["json", "text"] },
+                      "schema": { "type": "string" }
+                    }
+                  },
+                  "onMissingData": { "enum": ["return_validation_error", "proceed_with_nulls"] }
+                }
+              },
+              "input": { "type": "object" },
+              "output": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "schema": { "type": "string" } }
+              },
+              "effect": { "enum": ["read", "write"] },
+              "idempotencyKey": { "type": "string" },
+              "approval": { "enum": ["none", "required"] },
+              "compensation": { "type": "string" },
+              "condition": { "type": "string" },
+              "dependsOn": { "type": "array", "items": { "type": "string" } }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "effect": { "const": "write" } }, "required": ["effect"] },
+                "then": { "required": ["idempotencyKey"] }
+              },
+              {
+                "if": { "properties": { "type": { "const": "model" } } },
+                "then": { "required": ["prompt"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "knowledge": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "requireIntegrity": { "type": "boolean" },
+            "autoLoad": { "type": "boolean" }
+          }
+        },
+        "capability": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "requireIntegrity": { "type": "boolean" },
+            "requireAuthorization": { "type": "boolean" }
+          }
+        },
+        "write": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "requireApproval": { "type": "boolean" },
+            "requireIdempotency": { "type": "boolean" }
+          }
+        },
+        "audit": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "logEveryCapabilityCall": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "evaluation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "pre": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schema": { "type": "boolean" },
+            "bindings": { "type": "boolean" },
+            "idFormat": { "type": "boolean" },
+            "locks": { "type": "boolean" }
+          }
+        },
+        "post": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "idExistence": { "type": "boolean" },
+            "onFailure": { "enum": ["compensate", "halt", "return_error"] }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["draft", "reviewable", "executable"] }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "confidence"],
+            "properties": {
+              "text": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["q", "blocksExecution"],
+            "properties": {
+              "q": { "type": "string" },
+              "blocksExecution": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestHash", "createdAt", "lock"],
+      "properties": {
+        "manifestHash": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lock": { "type": "string" }
+      }
+    }
+  }
+}

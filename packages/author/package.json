@@ -1,0 +1,33 @@
+{
+  "name": "@aim/author",
+  "version": "1.0.0",
+  "description": "AIM Author level (§3.3–3.5): natural language → draft manifest, with the clarification loop and the hard authoring guards (AIM-E-4001/4002).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aim/core": "workspace:*"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "platform": "neutral",
+    "target": "es2022",
+    "dts": true,
+    "clean": true,
+    "sourcemap": true,
+    "external": ["@aim/core"]
+  }
+}
