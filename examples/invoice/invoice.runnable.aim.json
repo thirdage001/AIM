@@ -1,0 +1,170 @@
+{
+  "aim": "1.0",
+  "kind": "Manifest",
+  "id": "mf_8c1d4f",
+  "intent": {
+    "text": "Felder aus einem Dokument extrahieren und als Datensatz ablegen.",
+    "source": "natural-language",
+    "authoredBy": "human"
+  },
+  "inputs": {
+    "document": {
+      "type": "file",
+      "required": true
+    },
+    "targetTable": {
+      "type": "string",
+      "required": true
+    }
+  },
+  "skills": [
+    {
+      "ref": "knowledge.invoice-fields",
+      "trust": "knowledge",
+      "constraint": "^1.2",
+      "resolved": "1.2.3",
+      "hash": "sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff00",
+      "anchor": "signature"
+    },
+    {
+      "ref": "transform.normalize-date",
+      "trust": "transform",
+      "constraint": "=1.0.0",
+      "resolved": "1.0.0",
+      "hash": "sha256:9c8d7e6f5a4b3c2d1e0f00112233445566778899aabbccddeeff001122334455",
+      "anchor": "pinned-hash"
+    },
+    {
+      "ref": "transform.non-empty",
+      "trust": "transform",
+      "constraint": "=1.0.0",
+      "resolved": "1.0.0",
+      "hash": "sha256:00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff",
+      "anchor": "pinned-hash"
+    },
+    {
+      "ref": "capability.store.upsert",
+      "trust": "capability",
+      "constraint": "2.x",
+      "resolved": "2.4.0",
+      "hash": "sha256:f0e1d2c3b4a5968778695a4b3c2d1e0f00112233445566778899aabbccddeeff",
+      "scopes": [
+        "records:write"
+      ],
+      "approval": "required",
+      "anchor": "pinned-hash"
+    }
+  ],
+  "context": {
+    "strategy": "minimal-relevant",
+    "include": [
+      "skill:knowledge.invoice-fields#required-fields",
+      "input:document"
+    ],
+    "exclude": [
+      "skill:knowledge.invoice-fields#examples"
+    ]
+  },
+  "plan": {
+    "runtime": {
+      "adapter": "reference-node",
+      "model": {
+        "provider": "x",
+        "name": "y"
+      }
+    },
+    "steps": [
+      {
+        "id": "extract",
+        "type": "model",
+        "uses": "knowledge.invoice-fields",
+        "prompt": {
+          "role": "Rechnungs-Extraktor",
+          "goal": "Extrahiere die deklarierten Pflichtfelder als strukturiertes JSON.",
+          "style": "strict",
+          "rules": [
+            "Nur Werte aus dem Dokument verwenden.",
+            "Keine fehlenden Werte erfinden.",
+            "Nummern und Bezeichner exakt übernehmen."
+          ],
+          "contextFrom": [
+            "knowledge.invoice-fields",
+            "input:document"
+          ],
+          "output": {
+            "format": "json",
+            "schema": "InvoiceFields"
+          },
+          "onMissingData": "return_validation_error"
+        },
+        "output": {
+          "schema": "InvoiceFields"
+        }
+      },
+      {
+        "id": "store",
+        "type": "capability",
+        "uses": "capability.store.upsert",
+        "effect": "write",
+        "input": {
+          "table": "${inputs.targetTable}",
+          "record": "${steps.extract.output.fields}",
+          "date": "${transform.normalize-date(steps.extract.output.fields.date)}"
+        },
+        "idempotencyKey": "${steps.extract.output.fields.invoiceNo}",
+        "approval": "required",
+        "compensation": "capability.store.delete",
+        "condition": "${transform.non-empty(steps.extract.output.fields)}",
+        "dependsOn": [
+          "extract"
+        ]
+      }
+    ]
+  },
+  "policy": {
+    "knowledge": {
+      "requireIntegrity": true,
+      "autoLoad": false
+    },
+    "capability": {
+      "requireIntegrity": true,
+      "requireAuthorization": true
+    },
+    "write": {
+      "requireApproval": true,
+      "requireIdempotency": true
+    },
+    "audit": {
+      "logEveryCapabilityCall": true
+    }
+  },
+  "evaluation": {
+    "pre": {
+      "schema": true,
+      "bindings": true,
+      "idFormat": true,
+      "locks": true
+    },
+    "post": {
+      "idExistence": true,
+      "onFailure": "compensate"
+    }
+  },
+  "uncertainty": {
+    "assumptions": [
+      {
+        "text": "Datum liegt extrahierbar vor.",
+        "confidence": 0.7
+      }
+    ],
+    "openQuestions": []
+  },
+  "lifecycle": {
+    "mode": "reviewable"
+  },
+  "provenance": {
+    "manifestHash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "createdAt": "2026-06-23T10:00:00Z",
+    "lock": "aim.lock"
+  }
+}

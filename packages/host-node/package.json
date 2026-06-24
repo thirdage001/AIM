@@ -1,0 +1,34 @@
+{
+  "name": "@aim/host-node",
+  "version": "1.0.0",
+  "description": "Node host for AIM: concrete ports (fs files/locks, Web Crypto, idempotency, approval, review, audit) and runtime assembly.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aim/core": "workspace:*",
+    "@aim/adapter-reference": "workspace:*"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "platform": "node",
+    "target": "es2022",
+    "dts": true,
+    "clean": true,
+    "sourcemap": true,
+    "external": ["@aim/core", "@aim/adapter-reference"]
+  }
+}

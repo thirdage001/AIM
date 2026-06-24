@@ -1,0 +1,33 @@
+{
+  "name": "@aim/adapter-reference",
+  "version": "1.0.0",
+  "description": "AIM reference-node RuntimeAdapter (§13.2/13.4). Runtime-neutral: model/capability/transform calls go through injected ports.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aim/core": "workspace:*"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "platform": "neutral",
+    "target": "es2022",
+    "dts": true,
+    "clean": true,
+    "sourcemap": true,
+    "external": ["@aim/core"]
+  }
+}

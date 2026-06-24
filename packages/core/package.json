@@ -1,0 +1,29 @@
+{
+  "name": "@aim/core",
+  "version": "1.0.0",
+  "description": "AIM 1.0 portable kernel — zero runtime dependencies, Web-Standard APIs only (Node, Deno, Cloudflare Workers).",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit"
+  },
+  "tsup": {
+    "entry": ["src/index.ts"],
+    "format": ["esm"],
+    "platform": "neutral",
+    "target": "es2022",
+    "dts": true,
+    "clean": true,
+    "sourcemap": true
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aim.spec/1.0/draft.json",
+  "title": "AIM Draft Manifest 1.0",
+  "description": "Authoring profile (§3.3, §6 of aim.authoring): a valid manifest minus tool-generated fields. provenance is not yet present; skills carry only ref/trust/constraint/need.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["aim", "kind", "id", "intent", "plan", "lifecycle"],
+  "properties": {
+    "aim": { "const": "1.0" },
+    "kind": { "const": "Manifest" },
+    "id": { "type": "string", "pattern": "^mf_[a-z0-9_]+$" },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "source", "authoredBy"],
+      "properties": {
+        "text": { "type": "string", "minLength": 1 },
+        "source": { "enum": ["natural-language", "authored", "imported"] },
+        "authoredBy": { "enum": ["ai", "human"] }
+      }
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "required"],
+        "properties": {
+          "type": { "enum": ["string", "number", "boolean", "object", "array", "file"] },
+          "required": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "trust", "constraint"],
+        "properties": {
+          "ref": { "type": "string" },
+          "trust": { "enum": ["knowledge", "capability", "transform"] },
+          "constraint": { "type": "string" },
+          "need": { "type": "string" }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy"],
+      "properties": {
+        "strategy": { "enum": ["full", "minimal-relevant"] },
+        "include": { "type": "array", "items": { "type": "string" } },
+        "exclude": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "runtime": { "type": "object" },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "type", "uses"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "type": { "enum": ["model", "capability", "transform"] },
+              "uses": { "type": "string" },
+              "prompt": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["role", "goal", "output"],
+                "properties": {
+                  "role": { "type": "string" },
+                  "goal": { "type": "string" },
+                  "style": { "enum": ["strict", "concise", "explanatory"] },
+                  "rules": { "type": "array", "items": { "type": "string" } },
+                  "contextFrom": { "type": "array", "items": { "type": "string" } },
+                  "output": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["format"],
+                    "properties": {
+                      "format": { "enum": ["json", "text"] },
+                      "schema": { "type": "string" }
+                    }
+                  },
+                  "onMissingData": { "enum": ["return_validation_error", "proceed_with_nulls"] }
+                }
+              },
+              "input": { "type": "object" },
+              "output": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "schema": { "type": "string" } }
+              },
+              "effect": { "enum": ["read", "write"] },
+              "idempotencyKey": { "type": "string" },
+              "approval": { "enum": ["none", "required"] },
+              "compensation": { "type": "string" },
+              "condition": { "type": "string" },
+              "dependsOn": { "type": "array", "items": { "type": "string" } }
+            },
+            "allOf": [
+              {
+                "if": { "properties": { "type": { "const": "model" } } },
+                "then": { "required": ["prompt"] }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "uncertainty": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["text", "confidence"],
+            "properties": {
+              "text": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "openQuestions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["q", "blocksExecution"],
+            "properties": {
+              "q": { "type": "string" },
+              "blocksExecution": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode"],
+      "properties": {
+        "mode": { "enum": ["draft", "reviewable", "executable"] }
+      }
+    }
+  }
+}
